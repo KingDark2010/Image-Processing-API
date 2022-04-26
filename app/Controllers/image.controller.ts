@@ -1,8 +1,10 @@
 import Express from 'express';
 import * as fs from 'fs';
 import * as path from 'path';
-import  sharp from 'sharp';
 import { QueryParams } from '../Models/request.model';
+import { validateFile } from '../Utilities/file.utilities';
+import { imageProcessor } from '../Utilities/image.utilities';
+import { validateQuery } from '../Utilities/query.utilities';
 
 export const ImageController = async (req: Express.Request, res: Express.Response) => {
     try{
@@ -12,7 +14,7 @@ export const ImageController = async (req: Express.Request, res: Express.Respons
             height: req.query.height ?String(req.query.height) : ''
         };
         if(!validateQuery(queryObject)) {
-            res.status(400).send('Invalid query, please make sure to follow the format: ?file=file-name&width=file-width&height=file-height');
+            res.status(400).send('Invalid filename/height/width parameters, please make sure to follow the format: ?file=file-name&width=file-width&height=file-height');
             return;
         }
         const filePath: string = path.resolve(__dirname, '../../../public/', queryObject.file);
@@ -26,14 +28,9 @@ export const ImageController = async (req: Express.Request, res: Express.Respons
             //create thumb file name
             const thumbFileName: string = `thumb-${queryObject.width}-${queryObject.height}-${queryObject.file}`;
             //create thumb file path
-            const thumbFilePath: string = path.resolve(__dirname, '../../../public/thumbs/', thumbFileName);
-            //check if thumb file exist
-            if(!fs.existsSync(thumbFilePath)) {
-                //create thumb file
-                await sharp(filePath)
-                .resize(parseInt(queryObject.width), parseInt(queryObject.height))
-                .toFile(thumbFilePath);
-            }
+            const thumbFilePath: string = path.resolve(thumbsPath, thumbFileName);
+
+            await imageProcessor(filePath, thumbFilePath, queryObject.width, queryObject.height);
             //send thumb file
             res.sendFile(thumbFilePath);
         }
@@ -41,25 +38,3 @@ export const ImageController = async (req: Express.Request, res: Express.Respons
         res.status(500).json(err);
     }
 };
-
-
-export const validateQuery = (query: QueryParams):boolean => {
-    if(query.file === undefined || query.file === null || query.file === '') {
-        return false;
-    }
-    if(query.width === undefined || query.width === null || query.width === '') {
-        return false;
-    }
-    if(query.height === undefined || query.height === null || query.height === '') {
-        return false;
-    }
-    return true;
-};
-
-export const validateFile = (filePath: string):boolean => {
-    if(!fs.existsSync(filePath)) {
-        return false;
-    }
-    return true;
-};
-

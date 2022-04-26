@@ -58,52 +58,26 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ImageController = void 0;
+exports.imageProcessor = void 0;
+var sharp_1 = __importDefault(require("sharp"));
 var fs = __importStar(require("fs"));
-var path = __importStar(require("path"));
-var file_utilities_1 = require("../Utilities/file.utilities");
-var image_utilities_1 = require("../Utilities/image.utilities");
-var query_utilities_1 = require("../Utilities/query.utilities");
-var ImageController = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var queryObject, filePath, thumbsPath, thumbFileName, thumbFilePath, err_1;
+var imageProcessor = function (imagePath, newImaagePath, width, height) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
-                _a.trys.push([0, 4, , 5]);
-                queryObject = {
-                    file: req.query.file ? String(req.query.file) : '',
-                    width: req.query.width ? String(req.query.width) : '',
-                    height: req.query.height ? String(req.query.height) : ''
-                };
-                if (!(0, query_utilities_1.validateQuery)(queryObject)) {
-                    res.status(400).send('Invalid filename/height/width parameters, please make sure to follow the format: ?file=file-name&width=file-width&height=file-height');
-                    return [2 /*return*/];
-                }
-                filePath = path.resolve(__dirname, '../../../public/', queryObject.file);
-                if (!!(0, file_utilities_1.validateFile)(filePath)) return [3 /*break*/, 1];
-                res.status(404).send('file not found, make sure image exists in public folder');
-                return [3 /*break*/, 3];
+                if (!!fs.existsSync(newImaagePath)) return [3 /*break*/, 2];
+                return [4 /*yield*/, (0, sharp_1.default)(imagePath)
+                        .resize(parseInt(width), parseInt(height))
+                        .toFile(newImaagePath)];
             case 1:
-                thumbsPath = filePath.replace('public', 'public/thumbs');
-                if (!fs.existsSync(thumbsPath)) {
-                    fs.mkdirSync(thumbsPath);
-                }
-                thumbFileName = "thumb-".concat(queryObject.width, "-").concat(queryObject.height, "-").concat(queryObject.file);
-                thumbFilePath = path.resolve(thumbsPath, thumbFileName);
-                return [4 /*yield*/, (0, image_utilities_1.imageProcessor)(filePath, thumbFilePath, queryObject.width, queryObject.height)];
-            case 2:
                 _a.sent();
-                //send thumb file
-                res.sendFile(thumbFilePath);
-                _a.label = 3;
-            case 3: return [3 /*break*/, 5];
-            case 4:
-                err_1 = _a.sent();
-                res.status(500).json(err_1);
-                return [3 /*break*/, 5];
-            case 5: return [2 /*return*/];
+                _a.label = 2;
+            case 2: return [2 /*return*/];
         }
     });
 }); };
-exports.ImageController = ImageController;
+exports.imageProcessor = imageProcessor;
